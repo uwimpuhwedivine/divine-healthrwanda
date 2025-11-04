@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  divine-web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - divine-db
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    networks:
+      - divine-network
+
+  divine-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: health_rwanda
+      MYSQL_USER: divine_user
+      MYSQL_PASSWORD: divine_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+    networks:
+      - divine-network
+
+  divine-phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: divine-db
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8081:80"
+    depends_on:
+      - divine-db
+    networks:
+      - divine-network
+
+volumes:
+  mysql_data:
+
+networks:
+  divine-network:
+    driver: bridge
